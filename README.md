@@ -1,61 +1,172 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+<h1>URL Shortener</h1>
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+一個使用 Laravel 開發的短網址服務（URL Shortener），提供建立短網址、轉址、基本點擊統計等功能。
 
-## About Laravel
+此專案主要用於練習與展示後端系統設計，包括：
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+ - RESTful API 設計
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+ - 短碼生成策略
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+ - Redis 快取
 
-## Learning Laravel
+ - Docker 開發環境
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+ - 單元測試 / 功能測試
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+ - 短網址轉址系統設計
 
-## Laravel Sponsors
+---
+<h1>系統架構</h1>
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+```plain text
+Client
+|
+v
+Laravel Router
+|
++----------------------+
+|                      |
+v                      v
+API Controller      Redirect Controller
+|                      |
+v                      v
+ShortUrl Service ----> Repository
+|                      |
+|                      v
+|                MySQL Database
+|
++---- Redis Cache
+|
++---- Visit Logger
+```
+<h1>功能</h1>
 
-### Premium Partners
+目前系統規劃包含以下功能：
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[OP.GG](https://op.gg)**
+<h2>核心功能</h2>
 
-## Contributing
+ - 建立短網址
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+ - 透過短網址轉址
 
-## Code of Conduct
+ - 查詢短網址資訊
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+ - 更新短網址
 
-## Security Vulnerabilities
+- 刪除短網址
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+<h2>短網址管理</h2>
 
-## License
+ - 啟用 / 停用短網址
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+ - 設定過期時間
+
+ - 點擊次數統計
+
+<h2>進階功能（規劃中）</h2>
+
+ - Redis 快取加速轉址
+
+ - 訪問紀錄（IP / User Agent / Referer）
+
+- Analytics
+
+- 自訂 alias
+
+- Rate limit
+
+---
+
+<h1>技術棧</h1>
+<h3>Backend</h3>
+
+ - Laravel 7
+
+- PHP
+
+- RESTful API
+
+<h3>Database</h3>
+
+- MySQL
+
+<h3>Cache</h3>
+
+- Redis
+
+<h3>DevOps</h3>
+
+- Docker
+
+- Docker Compose
+
+<h3>Testing</h3>
+
+- PHPUnit
+
+---
+
+<h1>專案結構</h1>
+
+``` plain text
+app
+├─ Http
+│   ├─ Controllers
+│   │   ├─ Api
+│   │   │   └─ ShortUrlController.php
+│   │   └─ RedirectController.php
+│   │
+│   └─ Requests
+│       ├─ StoreShortUrlRequest.php
+│       └─ UpdateShortUrlRequest.php
+│
+├─ Services
+│   └─ ShortUrl
+│       ├─ CreateShortUrlService.php
+│       ├─ RedirectShortUrlService.php
+│       └─ ShortCodeGenerator.php
+│
+├─ Repositories
+│   └─ ShortUrlRepository.php
+│
+└─ Models
+├─ ShortUrl.php
+└─ ShortUrlVisit.php
+```
+
+---
+
+# 本地開發
+
+## 1. 下載專案
+
+```bash
+git clone https://github.com/jasonjason1018/url-shortener.git
+cd url-shortener
+```
+## 2. 設定環境變數
+``` plain text
+cp .env.example .env
+```
+## 3. 啟動 Docker 容器
+``` plain text
+docker-compose up -d --build
+```
+## 4. 產生 Laravel 金鑰
+``` plain text
+docker-compose exec php-fpm php artisan key:generate
+```
+## 5. 執行資料庫 Migration
+``` plain text
+docker-compose exec php-fpm php artisan migrate
+```
+## 6. 執行測試
+``` plain text
+docker-compose exec php-fpm php artisan test
+```
+## 7. 存取服務
+請依照 Docker / Web Server 設定，透過瀏覽器或 API 工具存取：
+```plain text
+http://localhost
+```
