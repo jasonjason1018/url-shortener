@@ -44,8 +44,8 @@ class ExceptionDecorator extends Exception
 
         $status = 500;
 
-        if ($message === 'Unauthorized') {
-            $status = 401;
+        if ($code != 999) {
+            $status = $code;
         }
 
         return response($result, $status);

@@ -103,4 +103,19 @@ abstract class TestCase extends BaseTestCase
     {
         Carbon::setTestNow();
     }
+
+    protected function makeSignature($method, $path, $timestamp, $nonce, $body, $secret)
+    {
+        $bodyHash = hash('sha256', $body);
+
+        $payload = implode("\n", [
+            strtoupper($method),
+            $path,
+            $timestamp,
+            $nonce,
+            $bodyHash,
+        ]);
+
+        return hash_hmac('sha256', $payload, $secret);
+    }
 }
