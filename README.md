@@ -25,20 +25,29 @@ Client
 v
 Laravel Router
 |
+v
+HMAC Auth Middleware
+|
 +----------------------+
 |                      |
 v                      v
 API Controller      Redirect Controller
 |                      |
-v                      v
-ShortUrl Service ----> Repository
-|                      |
-|                      v
-|                MySQL Database
++----------+-----------+
+           |
+           v
+    ShortUrl Service
+           |
+           v
+    ShortUrl Model
+           |
+           v
+    MySQL Database
+
+HMAC Auth Middleware
 |
-+---- Redis Cache
-|
-+---- Visit Logger
+v
+Redis (store nonce for 5 minutes)
 ```
 <h1>功能</h1>
 
