@@ -3,22 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\ShortenerUrl;
-use Illuminate\Http\Request;
+use App\Services\RedirectService;
+use App\Services\RedisService;
+use Illuminate\Support\Facades\Redis;
 
 class RedirectController extends Controller
 {
     public function redirect($code)
     {
-        $shortenerUrl = ShortenerUrl::select('origin_url')
-            ->where('code', '=', $code)
-            ->first();
-
-        if (!$shortenerUrl) {
-            return redirect()->route('404');
-        }
-
-        $targetUrl = $shortenerUrl->origin_url;
-
-        return redirect()->away($targetUrl);
+        $redirectService = new RedirectService();
+        return $redirectService->redirectToOriginUrl($code);
     }
 }
