@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/404', function () {
+    return response('short URL not found.', 404);
+})->name('404');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/{code}', 'RedirectController@redirect');
