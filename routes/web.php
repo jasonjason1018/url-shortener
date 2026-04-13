@@ -16,4 +16,5 @@ Route::get('/404', function () {
     return response('short URL not found.', 404);
 })->name('404');
 
-Route::get('/{code}', 'RedirectController@redirect');
+Route::get('/{code}', 'RedirectController@redirect')
+    ->middleware(['throttle:60,1', 'detect.shortcode.scanner']);

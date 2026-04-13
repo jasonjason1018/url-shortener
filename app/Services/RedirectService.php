@@ -9,7 +9,9 @@ class RedirectService {
 
     public function redirectToNotFoundPage()
     {
-        return redirect()->route('404');
+        return redirect()
+            ->route('404')
+            ->header('REDIRECT_STATUS_CODE', 404);
     }
 
     public function redirectToOriginUrl($code)
