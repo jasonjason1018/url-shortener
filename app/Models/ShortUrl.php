@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ShortenerUrl extends Model
+class ShortUrl extends Model
 {
-    protected $table = 'shortener_url';
-    protected $primaryKey = 'id_shortener_url';
+    protected $table = 'short_url';
+    protected $primaryKey = 'id_short_url';
 
     protected $fillable = [
         'origin_url',

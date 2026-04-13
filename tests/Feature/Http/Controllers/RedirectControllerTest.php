@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Http\Controllers;
 
-use App\Models\ShortenerUrl;
+use App\Models\ShortUrl;
 use App\Services\RedirectService;
 use App\Services\RedisService;
 use App\Services\ShortUrlService;
@@ -24,7 +24,7 @@ class RedirectControllerTest extends TestCase
         $originUrl = 'https://google.com';
         $code = 'testCode';
 
-        ShortenerUrl::create([
+        ShortUrl::create([
             'origin_url' => $originUrl,
             'code' => $code,
             'source' => 'test'

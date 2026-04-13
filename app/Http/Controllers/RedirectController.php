@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ShortenerUrl;
+use App\Models\ShortUrl;
 use App\Services\RedirectService;
 use App\Services\RedisService;
 use Illuminate\Support\Facades\Redis;

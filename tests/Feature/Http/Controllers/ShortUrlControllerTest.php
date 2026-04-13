@@ -3,10 +3,10 @@
 namespace Tests\Feature\Http\Controllers;
 
 use App\Model\HmacCredential;
-use App\Models\ShortenerUrl;
+use App\Models\ShortUrl;
 use Tests\TestCase;
 
-class UrlShortenerControllerTest extends TestCase
+class ShortUrlControllerTest extends TestCase
 {
     protected $seeders = [
         \HmacCredentialSeeder::class
@@ -30,7 +30,7 @@ class UrlShortenerControllerTest extends TestCase
         ];
 
         $method = 'POST';
-        $path = '/api/v1/urlShortener';
+        $path = '/api/v1/shortUrl';
         $timestamp = time();
         $nonce = bin2hex(random_bytes(16));;
         $body = json_encode($params);
@@ -49,13 +49,13 @@ class UrlShortenerControllerTest extends TestCase
             'X-Timestamp' => $timestamp,
             'X-Nonce' => $nonce,
             'X-Signature' => $signature,
-        ])->postJson('/api/v1/urlShortener', $params);
+        ])->postJson('/api/v1/shortUrl', $params);
         $response->assertStatus(200);
 
         $result = $response->json()['result'];
         $code = $result['code'];
 
-        $shortenerUrl = ShortenerUrl::where('code', '=', $code)->first();
+        $shortenerUrl = ShortUrl::where('code', '=', $code)->first();
         $this->assertEquals($originUrl, $shortenerUrl->origin_url);
         $this->assertEquals($source, $shortenerUrl->source);
     }

@@ -1,7 +1,7 @@
 <?php
 namespace App\Services;
 
-use App\Models\ShortenerUrl;
+use App\Models\ShortUrl;
 
 class RedirectService {
     const SHORT_URL_CACHE_PREFIX = 'redirect_code_';
@@ -26,7 +26,7 @@ class RedirectService {
             return redirect()->away($targetUrl);
         }
 
-        $targetUrl = ShortenerUrl::where('code', $code)->value('origin_url');
+        $targetUrl = ShortUrl::where('code', $code)->value('origin_url');
 
         if (!$targetUrl) {
             $shortUrlService->markCodeAsNotFound($code);

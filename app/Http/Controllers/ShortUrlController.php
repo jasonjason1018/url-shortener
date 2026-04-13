@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Services\ShortenerUrlService;
+use App\Services\ShortUrlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class UrlShortenerController extends Controller
+class ShortUrlController extends Controller
 {
     public function urlShortener(Request $request)
     {
@@ -24,7 +25,7 @@ class UrlShortenerController extends Controller
         $originUrl = $requestData['origin_url'];
         $source = $requestData['source'];
 
-        $urlShortenerService = new ShortenerUrlService();
-        return $urlShortenerService->generateShortenerUrlCode($originUrl, $source);
+        $shortUrlService = new ShortUrlService();
+        return $shortUrlService->generateShortenerUrlCode($originUrl, $source);
     }
 }

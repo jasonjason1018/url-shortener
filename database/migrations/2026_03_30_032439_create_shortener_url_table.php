@@ -13,8 +13,8 @@ class CreateShortenerUrlTable extends Migration
      */
     public function up()
     {
-        Schema::create('shortener_url', function (Blueprint $table) {
-            $table->id('id_shortener_url');
+        Schema::create('short_url', function (Blueprint $table) {
+            $table->id('id_short_url');
             $table->text('origin_url');
             $table->string('code', 50);
             $table->string('source', 50)

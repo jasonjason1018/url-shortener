@@ -1,12 +1,62 @@
 <?php
 namespace App\Services;
 
+use App\Models\ShortUrl;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
 class ShortUrlService {
+    private const CHARS = '23456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     private const SHORT_URL_CACHE_PREFIX = 'redirect_code_';
     private const NOT_FOUND_CODE_PREFIX = 'not_found_code_';
     private const DEFAULT_TTL = 3600;
+
+    public function generateShortenerUrlCode($originUrl, $source)
+    {
+        $code = $this->generateCode();
+        $baseUrl = config('app.url');
+
+        DB::beginTransaction();
+        try {
+            ShortUrl::create([
+                'origin_url' => $originUrl,
+                'code' => $code,
+                'source' => $source
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollback();
+            throw $e;
+        }
+
+        $result = [
+            'code' => $code,
+            'baseUrl' => $baseUrl
+        ];
+
+        return $result;
+    }
+
+    private function generateCode($length = 6)
+    {
+        while (true) {
+            $max = strlen(self::CHARS) - 1;
+            $code = '';
+
+            for ($i = 0; $i < $length; $i ++) {
+                $code .= self::CHARS[random_int(0, $max)];
+            }
+
+            $isCodeExists = ShortUrl::where('code', '=', $code)->exists();
+
+            if (!$isCodeExists) {
+                break;
+            }
+        }
+
+        return $code;
+    }
 
     public function getOriginUrl($code)
     {
