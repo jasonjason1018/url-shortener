@@ -10,6 +10,7 @@ class ShortUrlService {
     private const SHORT_URL_CACHE_PREFIX = 'redirect_code_';
     private const NOT_FOUND_CODE_PREFIX = 'not_found_code_';
     private const DEFAULT_TTL = 3600;
+    private const SEARCH_SHORT_URL_INFO_PREFIX = 'search_short_url_';
 
     public function generateShortenerUrlCode($originUrl, $source)
     {
@@ -88,5 +89,31 @@ class ShortUrlService {
     private function getNotFoundKey($code)
     {
         return self::NOT_FOUND_CODE_PREFIX . $code;
+    }
+
+    public function getShortUrlInfo($code)
+    {
+        $shortUrl = Redis::get(self::SEARCH_SHORT_URL_INFO_PREFIX . $code);
+
+        if (!$shortUrl) {
+            $shortUrl = ShortUrl::select('code', 'origin_url', 'source')
+                ->where('code', '=', $code)
+                ->first();
+
+            $shortUrlJson = json_encode($shortUrl->toArray());
+            $this->cacheShortUrlInfo($code, $shortUrlJson);
+        }
+
+        return $shortUrl;
+    }
+
+    private function cacheShortUrlInfo($code, $info, $ttl = self::DEFAULT_TTL): void
+    {
+        Redis::set($this->getShortUrlInfoKey($code), $info, 'EX', $ttl);
+    }
+
+    private function getShortUrlInfoKey($code)
+    {
+        return self::SEARCH_SHORT_URL_INFO_PREFIX . $code;
     }
 }

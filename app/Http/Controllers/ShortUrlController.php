@@ -28,4 +28,16 @@ class ShortUrlController extends Controller
         $shortUrlService = new ShortUrlService();
         return $shortUrlService->generateShortenerUrlCode($originUrl, $source);
     }
+
+    public function getShortUrlInfo(Request $request)
+    {
+        $code = $request->input('code', null);
+
+        if (!$code) {
+            throw new \Exception('Invalid parameter request.');
+        }
+
+        $shortUrlService = new ShortUrlService();
+        return $shortUrlService->getShortUrlInfo($code);
+    }
 }
