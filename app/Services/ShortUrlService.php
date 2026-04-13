@@ -116,4 +116,12 @@ class ShortUrlService {
     {
         return self::SEARCH_SHORT_URL_INFO_PREFIX . $code;
     }
+
+    public function updateShortUrl($code, $originUrl)
+    {
+        ShortUrl::where('code', '=', $code)
+            ->update([
+                'origin_url' => $originUrl
+            ]);
+    }
 }

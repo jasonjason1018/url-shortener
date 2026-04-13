@@ -22,6 +22,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::group(['prefix' => 'v1', 'middleware' => 'hmac'], function () {
     Route::group(['prefix' => 'shortUrl'], function () {
         Route::post('/', 'ShortUrlController@urlShortener');
+        Route::patch('/', 'ShortUrlController@updateShortUrl');
         Route::post('/info', 'ShortUrlController@getShortUrlInfo');
     });
 

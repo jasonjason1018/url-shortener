@@ -40,4 +40,20 @@ class ShortUrlController extends Controller
         $shortUrlService = new ShortUrlService();
         return $shortUrlService->getShortUrlInfo($code);
     }
+
+    public function updateShortUrl(Request $request)
+    {
+        $code = $request->input('code', null);
+        $originUrl = $request->input('origin_url', null);
+
+        if (
+            !$code
+            || !$originUrl
+        ) {
+            throw new \Exception('Invalid parameter request.');
+        }
+
+        $shortUrlService = new ShortUrlService();
+        return $shortUrlService->updateShortUrl($code, $originUrl);
+    }
 }
