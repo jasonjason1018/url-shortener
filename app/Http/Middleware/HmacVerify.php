@@ -54,6 +54,12 @@ class HmacVerify
             throw new \Exception('Invalid request signature.', 401);
         }
 
+        $nonceKey = "nonce:{$clientId}:{$nonce}";
+        if (Redis::exists($nonceKey)) {
+            throw new \Exception('Nonce already used.', 401);
+        }
+        Redis::setex($nonceKey, 300, 1);
+
         return $next($request);
     }
 

@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Models\ShortUrl;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
@@ -12,51 +13,54 @@ class ShortUrlService {
     private const DEFAULT_TTL = 3600;
     private const SEARCH_SHORT_URL_INFO_PREFIX = 'search_short_url_';
 
+    private const MAX_CODE_RETRIES = 10;
+
     public function generateShortenerUrlCode($originUrl, $source)
     {
-        $code = $this->generateCode();
         $baseUrl = config('app.url');
+        $attempts = 0;
 
-        DB::beginTransaction();
-        try {
-            ShortUrl::create([
-                'origin_url' => $originUrl,
-                'code' => $code,
-                'source' => $source
-            ]);
+        while ($attempts < self::MAX_CODE_RETRIES) {
+            $code = $this->generateCode();
 
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollback();
-            throw $e;
+            DB::beginTransaction();
+            try {
+                ShortUrl::create([
+                    'origin_url' => $originUrl,
+                    'code' => $code,
+                    'source' => $source
+                ]);
+
+                DB::commit();
+
+                return ['code' => $code, 'baseUrl' => $baseUrl];
+            } catch (\Illuminate\Database\QueryException $e) {
+                DB::rollback();
+                // Unique constraint violation — retry with a new code
+                if ($e->errorInfo[1] === 1062) {
+                    $attempts++;
+                    continue;
+                }
+                throw $e;
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
         }
 
-        $result = [
-            'code' => $code,
-            'baseUrl' => $baseUrl
-        ];
-
-        return $result;
+        throw new \Exception('Failed to generate a unique short code after ' . self::MAX_CODE_RETRIES . ' attempts.', 500);
     }
 
-    private function generateCode($length = 6)
+    private function generateCode($length = 6): string
     {
-        while (true) {
-            $max = strlen(self::CHARS) - 1;
-            $code = '';
+        $max = strlen(self::CHARS) - 1;
+        $chars = [];
 
-            for ($i = 0; $i < $length; $i ++) {
-                $code .= self::CHARS[random_int(0, $max)];
-            }
-
-            $isCodeExists = ShortUrl::where('code', '=', $code)->exists();
-
-            if (!$isCodeExists) {
-                break;
-            }
+        for ($i = 0; $i < $length; $i++) {
+            $chars[] = self::CHARS[random_int(0, $max)];
         }
 
-        return $code;
+        return implode('', $chars);
     }
 
     public function getOriginUrl($code)
@@ -91,20 +95,41 @@ class ShortUrlService {
         return self::NOT_FOUND_CODE_PREFIX . $code;
     }
 
-    public function getShortUrlInfo($code)
+    public function getShortUrlInfo($code): ?array
     {
-        $shortUrl = Redis::get(self::SEARCH_SHORT_URL_INFO_PREFIX . $code);
+        $cacheKey = $this->getShortUrlInfoKey($code);
+        $cached = Redis::get($cacheKey);
 
-        if (!$shortUrl) {
+        if ($cached !== null) {
+            return json_decode($cached, true);
+        }
+
+        $lock = Cache::lock('lock:short_url_info:' . $code, 5);
+
+        try {
+            $lock->block(3);
+
+            // Double-check after acquiring lock
+            $cached = Redis::get($cacheKey);
+            if ($cached !== null) {
+                return json_decode($cached, true);
+            }
+
             $shortUrl = ShortUrl::select('code', 'origin_url', 'source')
                 ->where('code', '=', $code)
                 ->first();
 
-            $shortUrlJson = json_encode($shortUrl->toArray());
-            $this->cacheShortUrlInfo($code, $shortUrlJson);
-        }
+            if (!$shortUrl) {
+                return null;
+            }
 
-        return $shortUrl;
+            $data = $shortUrl->toArray();
+            $this->cacheShortUrlInfo($code, json_encode($data));
+
+            return $data;
+        } finally {
+            $lock->release();
+        }
     }
 
     private function cacheShortUrlInfo($code, $info, $ttl = self::DEFAULT_TTL): void
@@ -117,11 +142,14 @@ class ShortUrlService {
         return self::SEARCH_SHORT_URL_INFO_PREFIX . $code;
     }
 
-    public function updateShortUrl($code, $originUrl)
+    public function updateShortUrl($code, $originUrl): void
     {
         ShortUrl::where('code', '=', $code)
             ->update([
                 'origin_url' => $originUrl
             ]);
+
+        Redis::del($this->getOriginUrlKey($code));
+        Redis::del($this->getShortUrlInfoKey($code));
     }
 }
